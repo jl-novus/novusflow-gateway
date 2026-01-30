@@ -11,7 +11,7 @@
 import { Type } from "@sinclair/typebox";
 
 import type { OpenClawPluginDefinition, OpenClawPluginApi } from "../../types.js";
-import { jsonResult } from "../../agents/tools/common.js";
+import { jsonResult } from "../../../agents/tools/common.js";
 
 // Configuration interface
 interface MemoryBridgeConfig {
