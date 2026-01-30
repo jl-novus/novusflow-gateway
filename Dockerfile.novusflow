@@ -74,6 +74,11 @@ RUN mkdir -p /app/workspace /app/logs \
     && echo '{"gateway":{"mode":"local","bind":"lan","port":18789},"plugins":{"slots":{}}}' > /home/novusflow/.openclaw/openclaw.json \
     && chown -R novusflow:novusflow /app/workspace /app/logs /home/novusflow
 
+# Create entrypoint script for proper initialization (before USER switch)
+RUN printf '#!/bin/sh\ncd /app\nnode openclaw.mjs doctor --fix 2>&1 || true\nexec node openclaw.mjs gateway run --port 18789 --bind lan --verbose\n' > /app/entrypoint.sh \
+    && chmod +x /app/entrypoint.sh \
+    && chown novusflow:novusflow /app/entrypoint.sh
+
 # Security environment variables
 ENV NODE_ENV=production
 ENV NOVUSFLOW_SANDBOX_ONLY=true
@@ -88,14 +93,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 # Run as non-root user
 USER novusflow
-
-# Create entrypoint script for proper initialization
-RUN echo '#!/bin/sh\n\
-# Run doctor to fix any issues\n\
-node openclaw.mjs doctor --fix 2>&1 || true\n\
-# Start gateway in foreground\n\
-exec node openclaw.mjs gateway run --port 18789 --bind lan --verbose\n\
-' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Start gateway with proper initialization
 CMD ["/app/entrypoint.sh"]
