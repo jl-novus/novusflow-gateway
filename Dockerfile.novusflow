@@ -15,7 +15,10 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY patches ./patches
 
-# Install dependencies
+# Copy scripts needed for postinstall
+COPY scripts ./scripts
+
+# Install dependencies (scripts needed for postinstall)
 RUN pnpm install --frozen-lockfile --prod=false
 
 # Copy source code
@@ -55,6 +58,9 @@ COPY --from=builder --chown=novusflow:novusflow /app/ui/dist ./ui/dist 2>/dev/nu
 # Copy skills directory
 COPY --from=builder --chown=novusflow:novusflow /app/skills ./skills 2>/dev/null || true
 
+# Copy extensions directory (plugin manifests)
+COPY --from=builder --chown=novusflow:novusflow /app/extensions ./extensions 2>/dev/null || true
+
 # Create workspace and logs directories
 RUN mkdir -p /app/workspace /app/logs && chown -R novusflow:novusflow /app/workspace /app/logs
 
@@ -74,4 +80,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 USER novusflow
 
 # Start gateway with proper command structure
-CMD ["node", "openclaw.mjs", "gateway", "--force", "--port", "18789"]
+# Note: --bind lan for all interfaces, no --force (requires lsof)
+CMD ["node", "openclaw.mjs", "gateway", "--port", "18789", "--bind", "lan"]
