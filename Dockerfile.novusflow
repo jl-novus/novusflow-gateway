@@ -63,12 +63,14 @@ COPY --from=builder --chown=novusflow:novusflow /app/skill[s] ./skills/
 COPY --from=builder --chown=novusflow:novusflow /app/extension[s] ./extensions/
 
 # Create workspace, logs, and OpenClaw state directories with default config
-# Include credentials directory and all required OpenClaw directories
+# Include all required OpenClaw directories reported by doctor
 RUN mkdir -p /app/workspace /app/logs \
     /home/novusflow/.openclaw/identity \
     /home/novusflow/.openclaw/credentials \
     /home/novusflow/.openclaw/sessions \
     /home/novusflow/.openclaw/logs \
+    /home/novusflow/.openclaw/agents/main/sessions \
+    /home/novusflow/.openclaw/agents/main/workspace \
     && echo '{"gateway":{"mode":"local","bind":"lan","port":18789},"plugins":{"slots":{}}}' > /home/novusflow/.openclaw/openclaw.json \
     && chown -R novusflow:novusflow /app/workspace /app/logs /home/novusflow
 
@@ -87,6 +89,13 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 # Run as non-root user
 USER novusflow
 
-# Start gateway with proper command structure
-# Note: gateway "run" subcommand required, --bind lan for all interfaces, --verbose for logs
-CMD ["node", "openclaw.mjs", "gateway", "run", "--port", "18789", "--bind", "lan", "--verbose"]
+# Create entrypoint script for proper initialization
+RUN echo '#!/bin/sh\n\
+# Run doctor to fix any issues\n\
+node openclaw.mjs doctor --fix 2>&1 || true\n\
+# Start gateway in foreground\n\
+exec node openclaw.mjs gateway run --port 18789 --bind lan --verbose\n\
+' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+# Start gateway with proper initialization
+CMD ["/app/entrypoint.sh"]
