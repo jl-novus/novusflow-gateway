@@ -1,0 +1,25 @@
+{
+  "id": "novusflow-memory-bridge",
+  "name": "NovusFlow Memory Bridge",
+  "version": "1.0.0",
+  "description": "PostgreSQL/RuVector memory integration for persistent context",
+  "main": "dist/index.js",
+  "kind": "memory",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "pgHost": {
+        "type": "string",
+        "description": "PostgreSQL host"
+      },
+      "pgPort": {
+        "type": "number",
+        "description": "PostgreSQL port"
+      },
+      "defaultNamespace": {
+        "type": "string",
+        "description": "Default memory namespace"
+      }
+    }
+  }
+}
