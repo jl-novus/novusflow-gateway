@@ -1,0 +1,14 @@
+{
+  "name": "@novusflow/openclaw-memory-bridge",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "OpenClaw plugin for NovusFlow Memory Bridge (PostgreSQL/RuVector enterprise memory)",
+  "dependencies": {
+    "@sinclair/typebox": "0.34.47"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
