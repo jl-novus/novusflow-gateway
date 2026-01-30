@@ -104,7 +104,7 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
           },
           required: ["key", "value"],
         },
-        execute: async (params: { key: string; value: string; namespace?: string; metadata?: Record<string, unknown> }) => {
+        execute: async (_toolCallId: string, params: { key: string; value: string; namespace?: string; metadata?: Record<string, unknown> }) => {
           try {
             const schema = validateSchema(params.namespace ?? config.defaultNamespace);
 
@@ -120,15 +120,12 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
             logger.info(`memory_store: ${params.key} -> ${schema}`);
 
             return {
-              success: true,
-              key: params.key,
-              namespace: schema,
-              message: `Stored '${params.key}' in ${schema}`,
+              content: [{ type: "text" as const, text: `Stored '${params.key}' in ${schema}` }],
             };
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             logger.error(`memory_store error: ${msg}`);
-            return { success: false, error: msg };
+            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
           }
         },
       },
@@ -162,7 +159,7 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
           },
           required: ["query"],
         },
-        execute: async (params: { query: string; namespace?: string; limit?: number }) => {
+        execute: async (_toolCallId: string, params: { query: string; namespace?: string; limit?: number }) => {
           try {
             const schema = validateSchema(params.namespace ?? config.defaultNamespace);
             const limit = params.limit ?? 10;
@@ -171,16 +168,12 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
 
             // Return placeholder for now - will be connected to actual RuVector search
             return {
-              success: true,
-              query: params.query,
-              namespace: schema,
-              results: [],
-              message: `Searched ${schema} for "${params.query}"`,
+              content: [{ type: "text" as const, text: `Searched ${schema} for "${params.query}" (limit: ${limit}). No results found.` }],
             };
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             logger.error(`memory_search error: ${msg}`);
-            return { success: false, error: msg };
+            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
           }
         },
       },
@@ -209,23 +202,19 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
           },
           required: ["key"],
         },
-        execute: async (params: { key: string; namespace?: string }) => {
+        execute: async (_toolCallId: string, params: { key: string; namespace?: string }) => {
           try {
             const schema = validateSchema(params.namespace ?? config.defaultNamespace);
 
             logger.info(`memory_read: ${params.key} from ${schema}`);
 
             return {
-              success: true,
-              key: params.key,
-              namespace: schema,
-              value: null,
-              message: `Read '${params.key}' from ${schema}`,
+              content: [{ type: "text" as const, text: `Read '${params.key}' from ${schema}: (no value found)` }],
             };
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             logger.error(`memory_read error: ${msg}`);
-            return { success: false, error: msg };
+            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
           }
         },
       },
