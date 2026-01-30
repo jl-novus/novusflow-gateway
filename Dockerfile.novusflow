@@ -81,5 +81,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 USER novusflow
 
 # Start gateway with proper command structure
-# Note: --bind lan for all interfaces, no --force (requires lsof)
-CMD ["node", "openclaw.mjs", "gateway", "--port", "18789", "--bind", "lan"]
+# Note: gateway "run" subcommand required, --bind lan for all interfaces, --verbose for logs
+CMD ["node", "openclaw.mjs", "gateway", "run", "--port", "18789", "--bind", "lan", "--verbose"]
