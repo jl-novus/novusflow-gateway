@@ -24,7 +24,8 @@ RUN pnpm install --frozen-lockfile --prod=false
 # Copy source code
 COPY . .
 
-# Build application
+# Build application (skip A2UI bundle if sources not available)
+ENV OPENCLAW_A2UI_SKIP_MISSING=1
 RUN pnpm build
 
 # Build UI if present
