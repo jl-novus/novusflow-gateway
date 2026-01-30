@@ -121,11 +121,12 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
 
             return {
               content: [{ type: "text" as const, text: `Stored '${params.key}' in ${schema}` }],
+              details: { success: true, key: params.key, namespace: schema },
             };
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             logger.error(`memory_store error: ${msg}`);
-            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
+            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], details: { success: false, error: msg }, isError: true };
           }
         },
       },
@@ -169,11 +170,12 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
             // Return placeholder for now - will be connected to actual RuVector search
             return {
               content: [{ type: "text" as const, text: `Searched ${schema} for "${params.query}" (limit: ${limit}). No results found.` }],
+              details: { success: true, query: params.query, namespace: schema, results: [] },
             };
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             logger.error(`memory_search error: ${msg}`);
-            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
+            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], details: { success: false, error: msg }, isError: true };
           }
         },
       },
@@ -210,11 +212,12 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
 
             return {
               content: [{ type: "text" as const, text: `Read '${params.key}' from ${schema}: (no value found)` }],
+              details: { success: true, key: params.key, namespace: schema, value: null },
             };
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
             logger.error(`memory_read error: ${msg}`);
-            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
+            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], details: { success: false, error: msg }, isError: true };
           }
         },
       },
