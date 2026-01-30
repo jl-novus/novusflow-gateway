@@ -14,7 +14,7 @@ import { MemoryBridgeService } from "./src/service.js";
 import { setMemoryBridgeRuntime } from "./src/runtime.js";
 
 const plugin = {
-  id: "memory-bridge",
+  id: "novusflow-memory-bridge",
   name: "NovusFlow Memory Bridge",
   description: "PostgreSQL/RuVector memory backend for enterprise persistence",
   version: "1.0.0",

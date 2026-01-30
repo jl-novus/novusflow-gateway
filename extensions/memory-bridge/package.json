@@ -1,5 +1,5 @@
 {
-  "name": "@novusflow/openclaw-memory-bridge",
+  "name": "novusflow-memory-bridge",
   "version": "1.0.0",
   "type": "module",
   "description": "OpenClaw plugin for NovusFlow Memory Bridge (PostgreSQL/RuVector enterprise memory)",
