@@ -839,16 +839,15 @@ export function createExecTool(
       const configuredSecurity = defaults?.security ?? (host === "sandbox" ? "deny" : "allowlist");
       const requestedSecurity = normalizeExecSecurity(params.security);
       let security = minSecurity(configuredSecurity, requestedSecurity ?? configuredSecurity);
-      if (elevatedRequested && elevatedMode === "full") {
-        security = "full";
-      }
+      // SECURITY HARDENING: Removed elevated mode bypass (CVE 9.5)
+      // The following dangerous code has been removed:
+      // if (elevatedRequested && elevatedMode === "full") { security = "full"; }
       const configuredAsk = defaults?.ask ?? "on-miss";
       const requestedAsk = normalizeExecAsk(params.ask);
       let ask = maxAsk(configuredAsk, requestedAsk ?? configuredAsk);
-      const bypassApprovals = elevatedRequested && elevatedMode === "full";
-      if (bypassApprovals) {
-        ask = "off";
-      }
+      // SECURITY HARDENING: Never bypass approvals regardless of elevated mode
+      const bypassApprovals = false;
+      // Removed dangerous code: if (bypassApprovals) { ask = "off"; }
 
       const sandbox = host === "sandbox" ? defaults?.sandbox : undefined;
       const rawWorkdir = params.workdir?.trim() || defaults?.cwd || process.cwd();

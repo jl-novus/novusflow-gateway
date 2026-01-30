@@ -66,9 +66,19 @@ export type GatewayControlUiConfig = {
   enabled?: boolean;
   /** Optional base path prefix for the Control UI (e.g. "/openclaw"). */
   basePath?: string;
-  /** Allow token-only auth over insecure HTTP (default: false). */
+  /**
+   * Allow token-only auth over insecure HTTP (default: false).
+   * @deprecated SECURITY WARNING: This option is deprecated and will be removed.
+   * Setting this to true creates a critical security vulnerability.
+   * Use HTTPS/TLS instead of enabling insecure auth.
+   */
   allowInsecureAuth?: boolean;
-  /** DANGEROUS: Disable device identity checks for the Control UI (default: false). */
+  /**
+   * DANGEROUS: Disable device identity checks for the Control UI (default: false).
+   * @deprecated SECURITY WARNING: This option is deprecated and will be removed.
+   * Setting this to true creates a critical security vulnerability (CVE).
+   * Never enable this in production environments.
+   */
   dangerouslyDisableDeviceAuth?: boolean;
 };
 

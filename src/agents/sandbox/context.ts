@@ -14,12 +14,28 @@ import { resolveSandboxRuntimeStatus } from "./runtime-status.js";
 import { resolveSandboxScopeKey, resolveSandboxWorkspaceDir } from "./shared.js";
 import type { SandboxContext, SandboxWorkspaceInfo } from "./types.js";
 import { ensureSandboxWorkspace } from "./workspace.js";
+import {
+  assertSandboxOnly,
+  HARDENED_CONFIG,
+  logSecurityEvent,
+} from "../../process/exec-hardened.js";
 
 export async function resolveSandboxContext(params: {
   config?: OpenClawConfig;
   sessionKey?: string;
   workspaceDir?: string;
 }): Promise<SandboxContext | null> {
+  // SECURITY HARDENING: Enforce sandbox-only mode
+  assertSandboxOnly();
+
+  if (!HARDENED_CONFIG.sandboxOnly) {
+    logSecurityEvent("sandbox_enforced", {
+      reason: "Non-sandbox execution disabled in NovusFlow",
+      sessionKey: params.sessionKey,
+    });
+    throw new Error("Non-sandbox execution disabled in NovusFlow");
+  }
+
   const rawSessionKey = params.sessionKey?.trim();
   if (!rawSessionKey) return null;
 
