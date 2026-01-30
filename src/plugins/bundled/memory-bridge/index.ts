@@ -8,7 +8,10 @@
  * @version 1.0.0
  */
 
+import { Type } from "@sinclair/typebox";
+
 import type { OpenClawPluginDefinition, OpenClawPluginApi } from "../../types.js";
+import { jsonResult } from "../../agents/tools/common.js";
 
 // Configuration interface
 interface MemoryBridgeConfig {
@@ -60,6 +63,24 @@ function validateSchema(schema: string): string {
   return normalized;
 }
 
+// TypeBox schemas for tool parameters
+const MemoryStoreSchema = Type.Object({
+  key: Type.String({ description: "Unique key for the memory entry" }),
+  value: Type.String({ description: "The content to store" }),
+  namespace: Type.Optional(Type.String({ description: "Memory namespace (e.g., 'internal', 'shared_patterns')" })),
+});
+
+const MemorySearchSchema = Type.Object({
+  query: Type.String({ description: "Search query (semantic similarity)" }),
+  namespace: Type.Optional(Type.String({ description: "Memory namespace to search" })),
+  limit: Type.Optional(Type.Number({ description: "Maximum results to return" })),
+});
+
+const MemoryReadSchema = Type.Object({
+  key: Type.String({ description: "The key of the memory entry to read" }),
+  namespace: Type.Optional(Type.String({ description: "Memory namespace" })),
+});
+
 // Memory bridge plugin definition
 const memoryBridgePlugin: OpenClawPluginDefinition = {
   id: "novusflow-memory-bridge",
@@ -75,204 +96,142 @@ const memoryBridgePlugin: OpenClawPluginDefinition = {
     logger.info(`Memory Bridge initializing - connecting to ${config.pgHost}:${config.pgPort}`);
 
     // ==========================================================================
-    // TOOL: memory_store
+    // TOOL: novusflow_memory_store
     // ==========================================================================
     api.registerTool(
       {
-        name: "memory_store",
-        description: "Store information in persistent memory with semantic indexing",
-        inputSchema: {
-          type: "object",
-          properties: {
-            key: {
-              type: "string",
-              description: "Unique key for the memory entry",
-            },
-            value: {
-              type: "string",
-              description: "The content to store",
-            },
-            namespace: {
-              type: "string",
-              description: "Memory namespace (e.g., 'internal', 'shared_patterns')",
-              default: config.defaultNamespace,
-            },
-            metadata: {
-              type: "object",
-              description: "Optional metadata to attach",
-            },
-          },
-          required: ["key", "value"],
-        },
-        execute: async (_toolCallId: string, params: { key: string; value: string; namespace?: string; metadata?: Record<string, unknown> }) => {
+        label: "NovusFlow Memory Store",
+        name: "novusflow_memory_store",
+        description: "Store information in NovusFlow persistent memory with semantic indexing for later retrieval.",
+        parameters: MemoryStoreSchema,
+        execute: async (_toolCallId, params) => {
           try {
-            const schema = validateSchema(params.namespace ?? config.defaultNamespace);
+            const key = params.key as string;
+            const value = params.value as string;
+            const namespace = params.namespace as string | undefined;
+            const schema = validateSchema(namespace ?? config.defaultNamespace);
 
-            // Construct the memory store request to PostgreSQL
-            const entry = {
-              key: params.key,
-              value: params.value,
+            logger.info(`novusflow_memory_store: ${key} -> ${schema}`);
+
+            // TODO: Connect to actual PostgreSQL/RuVector backend
+            return jsonResult({
+              success: true,
+              key,
               namespace: schema,
-              metadata: params.metadata ?? {},
-              timestamp: new Date().toISOString(),
-            };
-
-            logger.info(`memory_store: ${params.key} -> ${schema}`);
-
-            return {
-              content: [{ type: "text" as const, text: `Stored '${params.key}' in ${schema}` }],
-              details: { success: true, key: params.key, namespace: schema },
-            };
+              message: `Stored '${key}' in ${schema}`,
+            });
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error(`memory_store error: ${msg}`);
-            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], details: { success: false, error: msg }, isError: true };
+            logger.error(`novusflow_memory_store error: ${msg}`);
+            return jsonResult({ success: false, error: msg });
           }
         },
       },
-      { name: "memory_store" }
+      { name: "novusflow_memory_store" }
     );
 
     // ==========================================================================
-    // TOOL: memory_search
+    // TOOL: novusflow_memory_search
     // ==========================================================================
     api.registerTool(
       {
-        name: "memory_search",
-        description: "Search memory using semantic similarity (vector search)",
-        inputSchema: {
-          type: "object",
-          properties: {
-            query: {
-              type: "string",
-              description: "Search query (semantic similarity)",
-            },
-            namespace: {
-              type: "string",
-              description: "Memory namespace to search",
-              default: config.defaultNamespace,
-            },
-            limit: {
-              type: "number",
-              description: "Maximum results to return",
-              default: 10,
-            },
-          },
-          required: ["query"],
-        },
-        execute: async (_toolCallId: string, params: { query: string; namespace?: string; limit?: number }) => {
+        label: "NovusFlow Memory Search",
+        name: "novusflow_memory_search",
+        description: "Search NovusFlow memory using semantic similarity (vector search) to find relevant past information.",
+        parameters: MemorySearchSchema,
+        execute: async (_toolCallId, params) => {
           try {
-            const schema = validateSchema(params.namespace ?? config.defaultNamespace);
-            const limit = params.limit ?? 10;
+            const query = params.query as string;
+            const namespace = params.namespace as string | undefined;
+            const limit = (params.limit as number | undefined) ?? 10;
+            const schema = validateSchema(namespace ?? config.defaultNamespace);
 
-            logger.info(`memory_search: "${params.query}" in ${schema} (limit: ${limit})`);
+            logger.info(`novusflow_memory_search: "${query}" in ${schema} (limit: ${limit})`);
 
-            // Return placeholder for now - will be connected to actual RuVector search
-            return {
-              content: [{ type: "text" as const, text: `Searched ${schema} for "${params.query}" (limit: ${limit}). No results found.` }],
-              details: { success: true, query: params.query, namespace: schema, results: [] },
-            };
+            // TODO: Connect to actual RuVector search
+            return jsonResult({
+              success: true,
+              query,
+              namespace: schema,
+              results: [],
+              message: `Searched ${schema} for "${query}" (no results yet - backend not connected)`,
+            });
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error(`memory_search error: ${msg}`);
-            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], details: { success: false, error: msg }, isError: true };
+            logger.error(`novusflow_memory_search error: ${msg}`);
+            return jsonResult({ success: false, error: msg });
           }
         },
       },
-      { name: "memory_search" }
+      { name: "novusflow_memory_search" }
     );
 
     // ==========================================================================
-    // TOOL: memory_read
+    // TOOL: novusflow_memory_read
     // ==========================================================================
     api.registerTool(
       {
-        name: "memory_read",
-        description: "Read a specific memory entry by key",
-        inputSchema: {
-          type: "object",
-          properties: {
-            key: {
-              type: "string",
-              description: "The key of the memory entry to read",
-            },
-            namespace: {
-              type: "string",
-              description: "Memory namespace",
-              default: config.defaultNamespace,
-            },
-          },
-          required: ["key"],
-        },
-        execute: async (_toolCallId: string, params: { key: string; namespace?: string }) => {
+        label: "NovusFlow Memory Read",
+        name: "novusflow_memory_read",
+        description: "Read a specific memory entry by key from NovusFlow persistent storage.",
+        parameters: MemoryReadSchema,
+        execute: async (_toolCallId, params) => {
           try {
-            const schema = validateSchema(params.namespace ?? config.defaultNamespace);
+            const key = params.key as string;
+            const namespace = params.namespace as string | undefined;
+            const schema = validateSchema(namespace ?? config.defaultNamespace);
 
-            logger.info(`memory_read: ${params.key} from ${schema}`);
+            logger.info(`novusflow_memory_read: ${key} from ${schema}`);
 
-            return {
-              content: [{ type: "text" as const, text: `Read '${params.key}' from ${schema}: (no value found)` }],
-              details: { success: true, key: params.key, namespace: schema, value: null },
-            };
+            // TODO: Connect to actual PostgreSQL backend
+            return jsonResult({
+              success: true,
+              key,
+              namespace: schema,
+              value: null,
+              message: `Read '${key}' from ${schema} (backend not connected)`,
+            });
           } catch (error) {
             const msg = error instanceof Error ? error.message : String(error);
-            logger.error(`memory_read error: ${msg}`);
-            return { content: [{ type: "text" as const, text: `Error: ${msg}` }], details: { success: false, error: msg }, isError: true };
+            logger.error(`novusflow_memory_read error: ${msg}`);
+            return jsonResult({ success: false, error: msg });
           }
         },
       },
-      { name: "memory_read" }
+      { name: "novusflow_memory_read" }
     );
 
     // ==========================================================================
     // HOOK: session_start - Load user context
     // ==========================================================================
-    api.on("session_start", async (event, ctx) => {
+    api.on("session_start", async (event, _ctx) => {
       logger.info(`Session started: ${event.sessionId} (resumed: ${event.resumedFrom ?? "no"})`);
-
-      // Load user's previous context from memory
-      // This would query PostgreSQL for the user's patterns and preferences
+      // TODO: Load user's previous context from PostgreSQL
     });
 
     // ==========================================================================
     // HOOK: session_end - Persist session summary
     // ==========================================================================
-    api.on("session_end", async (event, ctx) => {
+    api.on("session_end", async (event, _ctx) => {
       logger.info(`Session ended: ${event.sessionId} (messages: ${event.messageCount})`);
-
-      // Store session summary for future reference
-      // This would write to PostgreSQL with session metadata
+      // TODO: Store session summary in PostgreSQL
     });
 
     // ==========================================================================
     // HOOK: before_agent_start - Inject relevant context
     // ==========================================================================
-    api.on("before_agent_start", async (event, ctx) => {
-      // Search memory for relevant patterns based on the prompt
-      // Return context to prepend to the conversation
-
-      return {
-        prependContext: undefined, // Will return relevant memory entries
-      };
+    api.on("before_agent_start", async (_event, _ctx) => {
+      // TODO: Search memory for relevant patterns based on the prompt
+      return { prependContext: undefined };
     });
 
     // ==========================================================================
     // HOOK: agent_end - Learn from successful interactions
     // ==========================================================================
-    api.on("agent_end", async (event, ctx) => {
+    api.on("agent_end", async (event, _ctx) => {
       if (event.success) {
-        logger.info(`Agent completed successfully - storing patterns`);
-        // Extract and store successful patterns for future use
-      }
-    });
-
-    // ==========================================================================
-    // HOOK: after_tool_call - Track tool usage patterns
-    // ==========================================================================
-    api.on("after_tool_call", async (event, ctx) => {
-      // Track which tools are used successfully for pattern learning
-      if (!event.error) {
-        logger.debug?.(`Tool ${event.toolName} completed in ${event.durationMs}ms`);
+        logger.info("Agent completed successfully - storing patterns");
+        // TODO: Extract and store successful patterns
       }
     });
 
