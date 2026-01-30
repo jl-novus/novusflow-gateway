@@ -63,7 +63,12 @@ COPY --from=builder --chown=novusflow:novusflow /app/skill[s] ./skills/
 COPY --from=builder --chown=novusflow:novusflow /app/extension[s] ./extensions/
 
 # Create workspace, logs, and OpenClaw state directories with default config
-RUN mkdir -p /app/workspace /app/logs /home/novusflow/.openclaw/identity \
+# Include credentials directory and all required OpenClaw directories
+RUN mkdir -p /app/workspace /app/logs \
+    /home/novusflow/.openclaw/identity \
+    /home/novusflow/.openclaw/credentials \
+    /home/novusflow/.openclaw/sessions \
+    /home/novusflow/.openclaw/logs \
     && echo '{"gateway":{"mode":"local","bind":"lan","port":18789},"plugins":{"slots":{}}}' > /home/novusflow/.openclaw/openclaw.json \
     && chown -R novusflow:novusflow /app/workspace /app/logs /home/novusflow
 
