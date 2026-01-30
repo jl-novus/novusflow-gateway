@@ -53,14 +53,14 @@ COPY --from=builder --chown=novusflow:novusflow /app/node_modules ./node_modules
 COPY --from=builder --chown=novusflow:novusflow /app/package.json ./
 COPY --from=builder --chown=novusflow:novusflow /app/openclaw.mjs ./
 
-# Copy UI build if exists
-COPY --from=builder --chown=novusflow:novusflow /app/ui/dist ./ui/dist 2>/dev/null || true
+# Copy UI build if exists (use wildcard to handle missing gracefully)
+COPY --from=builder --chown=novusflow:novusflow /app/dist/control-ui ./dist/control-ui
 
 # Copy skills directory
-COPY --from=builder --chown=novusflow:novusflow /app/skills ./skills 2>/dev/null || true
+COPY --from=builder --chown=novusflow:novusflow /app/skill[s] ./skills/
 
-# Copy extensions directory (plugin manifests)
-COPY --from=builder --chown=novusflow:novusflow /app/extensions ./extensions 2>/dev/null || true
+# Copy extensions directory (plugin manifests) - use bracket trick for optional
+COPY --from=builder --chown=novusflow:novusflow /app/extension[s] ./extensions/
 
 # Create workspace and logs directories
 RUN mkdir -p /app/workspace /app/logs && chown -R novusflow:novusflow /app/workspace /app/logs
