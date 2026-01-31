@@ -71,7 +71,7 @@ RUN mkdir -p /app/workspace /app/logs \
     /home/novusflow/.openclaw/logs \
     /home/novusflow/.openclaw/agents/main/sessions \
     /home/novusflow/.openclaw/agents/main/workspace \
-    && echo '{"gateway":{"mode":"local","bind":"lan","port":18789,"auth":{"mode":"token"}},"plugins":{"slots":{}}}' > /home/novusflow/.openclaw/openclaw.json \
+    && echo '{"gateway":{"mode":"local","bind":"lan","port":18789,"auth":{"mode":"token","token":"58b801334d811e0d47ea1099a343ef3924d28d9286e9a47a4b963acf9ff95ad0"}},"plugins":{"slots":{}}}' > /home/novusflow/.openclaw/openclaw.json \
     && chown -R novusflow:novusflow /app/workspace /app/logs /home/novusflow
 
 # Create entrypoint script for proper initialization (before USER switch)
